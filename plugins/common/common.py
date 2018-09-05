@@ -123,8 +123,8 @@ def sacrifice(user, channel_id):
     sacrifice_list = get_active_users(channelname)
     target = random.choice(sacrifice_list)
     r = slack.sc.api_call("users.info", user=target)
-    target_name = r["user"]["name"]
-    msg = u"@{} 在此獻上:fire: @{} :fire:為祭品──給我瞧仔細了！".format(user, target_name)
+    target_user = r["user"]
+    msg = u"<@{}|{}> 在此獻上:fire: <@{}|{}> :fire:為祭品──給我瞧仔細了！".format(user['id'], user['name'], target_user['id'], target_user['name'])
     return msg
 
 def unary_command(cmd, channel_id, user, conn):
@@ -139,7 +139,7 @@ def unary_command(cmd, channel_id, user, conn):
     elif cmd in ["!coins"]:
         msg = coins(user, conn)
     elif cmd in ["!sacrifice"]:
-        msg = sacrifice(user['name'], channel_id)
+        msg = sacrifice(user, channel_id)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
@@ -195,7 +195,7 @@ def binary_command(cmd, target, channel_id, user, conn):
     global slack
     bot_icon = None
     if cmd[1:] in simple_binary_commands:
-        msg = simple_binary_commands[cmd[1:]].format(user['name'], target).encode('utf-8')
+        msg = simple_binary_commands[cmd[1:]].format(user['id'], user['name'], target).encode('utf-8')
     elif cmd in ["!add_coins_all"]:
         if user['name'] == ADMIN:
             coins = int(target)
