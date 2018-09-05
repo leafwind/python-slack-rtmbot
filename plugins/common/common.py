@@ -34,7 +34,21 @@ def get_all_users(channel_name):
         all_users = r["channel"]["members"]
     return all_users
 
-def get_active_users(channel_name):
+def get_active_user_ids():
+    global slack
+    active_users = []
+    r = slack.sc.api_call("users.list", presence=True)
+    if r["ok"] == True:
+        members = r["members"]
+        for user in members:
+            if 'presence' not in user:
+                pass
+            elif user["presence"] == "active":
+                active_users.append(user['id'])
+    return active_users
+
+
+def get_active_users_slow(channel_name):
     global slack
     active_users = []
     r = slack.sc.api_call("channels.info", channel=channel_map[channel_name])
@@ -52,7 +66,7 @@ def get_active_users(channel_name):
 def _drop_coin_target_users():
     global slack
     # all active users
-    #users = get_active_users(slack, "general")
+    #users = get_active_users()
     # lucky user from active
     #users = random.choice(active_users)
     users = get_all_users(slack, "general")
@@ -120,8 +134,8 @@ def coins(user, conn):
 
 def sacrifice(user, channel_id):
     channelname = slack.get_channelname(channel_id)
-    sacrifice_list = get_active_users(channelname)
-    target = random.choice(sacrifice_list)
+    sacrifice_id_list = get_active_user_ids()
+    target = random.choice(sacrifice_id_list)
     r = slack.sc.api_call("users.info", user=target)
     target_user = r["user"]
     msg = u"<@{}|{}> 在此獻上:fire: <@{}|{}> :fire:為祭品──給我瞧仔細了！".format(user['id'], user['name'], target_user['id'], target_user['name'])
