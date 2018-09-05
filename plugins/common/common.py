@@ -160,28 +160,33 @@ def unary_command(cmd, channel_id, user, conn):
 
 def friend(user, target):
     global friend_await
-    if user not in friend_await:
-        friend_await[user] = []
-    if target not in friend_await[user]:
-        friend_await[user].append(target)
-        msg = u"<@{}|{}> 想跟 <@{}|{}> 做朋友（輸入 !yfriend {} 同意）".format(user, target, user)
+    target_id = target[2:-1]  # "<@U0J4UJ7L6>"
+    if user['id'] not in friend_await:
+        friend_await[user['id']] = []
+    if target_id not in friend_await[user['id']]:
+        friend_await[user['id']].append(target_id)
+        msg = u"<@{}> 想跟 {} 做朋友（輸入 !yfriend <@{}> 同意）".format(user['id'], target, user['id'])
     else:
-        msg = u"<@{}|{}> 人家還沒回應你在急屁急".format(user)
+        msg = u"<@{}> 人家還沒回應你在急屁急".format(user['id'])
     return msg
 
 def yfriend(user, target, conn):
-    if target in friend_await:
-        if user in friend_await[target]:
+    global friend_await
+    target_id = target[2:-1]  # "<@U0J4UJ7L6>"
+    print(target_id)
+    print(friend_await)
+    if target_id in friend_await:
+        if user['id'] in friend_await[target_id]:
             c = conn.cursor()
-            msg = u"<@{}|{}> 接受了 <@{}|{}> 的好友邀請，現在他們是好碰友".format(user, target)
+            msg = u"<@{}> 接受了 {} 的好友邀請，現在他們是好碰友".format(user['id'], target)
             #friend_sets.append(set([user, target]))
-            c.execute('''INSERT INTO friends (user_a, user_b) VALUES (\'{}\', \'{}\');'''.format(user, target))
-            friend_await[target].remove(user)
+            c.execute('''INSERT INTO friends (user_a, user_b) VALUES (\'{}\', \'{}\');'''.format(user['id'], target_id))
+            friend_await[target_id].remove(user['id'])
             conn.commit()
         else:
-            msg = u"<@{}|{}> 沒有想要跟你做朋友好ㄇ".format(target)
+            msg = u"{} 沒有想要跟你做朋友好ㄇ".format(target)
     else:
-        msg = u"<@{}|{}> 沒有想要跟你做朋友好ㄇ".format(target)
+        msg = u"{} 沒有想要跟你做朋友好ㄇ".format(target)
     return msg
 
 #def add_coins(user, coins, conn):
@@ -217,9 +222,9 @@ def binary_command(cmd, target, channel_id, user, conn):
         else:
             return
     elif cmd in ["!friend"]:
-        msg = friend(user['name'], target)
+        msg = friend(user, target)
     elif cmd in ["!yfriend"]:
-        msg = yfriend(user['name'], target, conn)
+        msg = yfriend(user, target, conn)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
