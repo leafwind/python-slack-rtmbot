@@ -101,6 +101,9 @@ class RtmBot(object):
             plugin.do_jobs()
 
     def load_plugins(self):
+        '''
+        be careful the bot will load all plugins per 0.1s to check if there is new messages
+        '''
         for plugin in glob.glob(self.directory + '/plugins/*'):
             sys.path.insert(0, plugin)
             sys.path.insert(0, self.directory + '/plugins/')
@@ -142,7 +145,7 @@ class Plugin(object):
         if 'crontable' in dir(self.module):
             for interval, function in self.module.crontable:
                 self.jobs.append(Job(interval, eval("self.module." + function), self.debug))
-            logging.info(self.module.crontable)
+            logging.debug('self.module.crontable: {}'.format(self.module.crontable))
             self.module.crontable = []
         else:
             self.module.crontable = []
